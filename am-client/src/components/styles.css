@@ -1,0 +1,312 @@
+button {
+    border-style: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+span {
+    font-size: 1.5rem;
+}
+
+.main-home-bg {
+    width: 100vw;
+    height: 100vh;
+    background: var(--black-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.main-home-gamelogs {
+    background: var(--gray-bg);
+    margin: 5vw 6vw;
+    border-radius: 5rem;
+    width: 35rem;
+    height: 40rem;
+
+}
+
+.home-text {
+    text-align: center;
+    font-weight: 600;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.main-home-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+
+}
+
+.main-home-extra {
+    background: var(--gray-bg);
+    margin: 1.5vw 6vw;
+    border-radius: 5rem;
+    width: 35rem;
+    height: 20rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+}
+
+.play-button {
+    z-index: 0;
+    width: 3.8125rem;
+    height: 3.8125rem;
+    border-radius: 1.5rem;
+    border-style: hidden;
+    background: var(--yellow);
+    color: var(--black-bg);
+    text-decoration: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem;
+}
+
+.play-button:hover {
+    box-shadow: inset 1px -1px 2px var(--dark-yellow);
+}
+
+.play-icon:hover {
+    fill: var(--dark-yellow);
+}
+
+.game-body {
+    width: 100vw;
+    height: 100vh;
+    background: var(--black-bg);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.score-main {
+    color: white;
+    margin-top: .5vw;
+}
+
+.score-val {
+    font-weight: 800;
+}
+
+.time {
+    color: white;
+    margin-top: .5vw;
+
+}
+
+.flex-letters {
+    display: flex;
+    width: 75vw;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    margin: 3vh 2vw;
+}
+
+.display-letter {
+    background-color: var(--light-gray-bg);
+    height: 13vw;
+    width: 12vw;
+    border-radius: 4vw;
+}
+
+
+.active-display-letter {
+    background-color: var(--yellow);
+    height: 13vw;
+    width: 12vw;
+    border-radius: 3.5vw;
+    font-size: 8vw;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 100ms ease-in;
+
+
+}
+
+
+.input-letter {
+    background-color: var(--gray-bg);
+    height: 7vw;
+    width: 12vw;
+    border-radius: 2.5vw;
+    font-weight: 800;
+}
+
+.active-input-letter {
+    background-color: var(--yellow);
+    height: 7vw;
+    width: 12vw;
+    border-radius: 2.5vw;
+    font-size: 3rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    transition: all 100ms ease-in;
+
+}
+
+.actions {
+    width: 20vw;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 1vw;
+}
+
+.submit {
+    background-color: var(--light-gray-bg);
+    height: 8vh;
+    width: 8vw;
+    border-radius: 2vw;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.backspace {
+    background-color: var(--light-gray-bg);
+    height: 8vh;
+    width: 8vw;
+    border-radius: 2vw;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.shuffle {
+    background-color: var(--light-gray-bg);
+    height: 8vh;
+    width: 8vw;
+    border-radius: 2vw;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 640px) {
+    .active-input-letter {
+        font-size: 1rem;
+    }
+
+    .submit {
+        width: 20vw;
+        height: 8vw;
+    }
+
+    .flex-letters {
+        margin: 2.5vw 2vw;
+
+    }
+}
+
+.submit:hover {
+    background-color: var(--yellow);
+    transition: all 200ms ease-in;
+}
+
+.backspace:hover {
+    background-color: var(--yellow);
+    transition: all 200ms ease-in;
+}
+
+.score-box {
+    background: var(--gray-bg);
+    border-radius: 1.3rem;
+    margin-top: 5vh;
+    width: 35rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.score-text {
+    padding: 2vw 0;
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.score-text:last-child {
+    padding-left: 0.5vw;
+    font-weight: 800;
+}
+
+.results {
+    background: var(--gray-bg);
+    border-radius: 5rem;
+    margin-top: 2vh;
+    width: 35rem;
+    height: 40rem;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    overflow: auto;
+    color: white;
+}
+
+.result-item {
+    display: flex;
+    width: 100%;
+    margin: 0.5vh 1vw;
+    justify-content: space-between;
+    font-size: 1.5rem;
+}
+
+.result-item:first-child {
+    margin-top: 5vh;
+}
+
+.result-item-text {
+    margin: 0 5vw;
+}
+
+.result-title {
+    margin: 1vh;
+    font-size: 3rem;
+    font-weight: 800;
+}
+
+.return-home {
+    color: white;
+    text-decoration: none;
+    margin: 1vh 0;
+}
+
+.return-home:hover {
+    color: var(--yellow);
+    transition: all 100ms ease-in-out;
+}
+
+
+.feedback-inactive {
+    margin: 1vw 0 0 0;
+    width: 40%;
+    height: 5vh;
+    border-radius: 2rem;
+    background: var(--black-bg);
+    border: 1px var(--light-gray-bg) solid;
+}
+
+.feedback-active {
+    margin: 1vw 0 0 0;
+    width: 40%;
+    height: 5vh;
+    border-radius: 2rem;
+    background: var(--yellow);
+    transition: all 100ms ease-in-out;
+    text-align: center;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

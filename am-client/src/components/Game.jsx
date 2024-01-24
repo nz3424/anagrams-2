@@ -1,0 +1,329 @@
+import React, { useState, useEffect } from 'react';
+import { FaBackspace } from "react-icons/fa";
+import { FaShuffle } from "react-icons/fa6"
+import GameOver from './GameOver';
+import { scores, options, API_URL, letterSets } from "../constants";
+export default function Game({ size = 6 }) {
+
+    const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
+    const [letters, setLetters] = useState(letterSet);
+    // array of indices of letters currently displayed (index in letters)
+    const [display, setDisplay] = useState(Array(size).fill(null));
+
+    // array of whether input buttons (bottom) are active or inactive
+    const [inputClasses, setInputClasses] = useState(Array(size).fill(true));
+
+    // length of current string
+    const [currLength, setCurrLength] = useState(0);
+
+
+    const [currWord, setCurrWord] = useState("");
+    const [score, setScore] = useState(0);
+
+    const [feedback, setFeedback] = useState("inactive");
+    const [feedbackMessage, setFeedbackMessage] = useState("");
+
+    const [wordBank, setWordBank] = useState({});
+
+
+    // format: {letter: [# of occurences, <indices of letter>]}
+    // to access
+    const initialAvailLetters = {};
+    for (let i = 0; i < letters.length; i++) {
+        const letter = letters[i].toUpperCase();
+        if (!(letter in initialAvailLetters))
+            initialAvailLetters[letter] = [1, i];
+        else {
+            initialAvailLetters[letter].push(i);
+        }
+    }
+    const [availLetters, setAvailLetters] = useState(initialAvailLetters);
+
+    const [time, setTime] = useState(30);
+
+
+
+    // timer
+    useEffect(() => {
+        if (time > 30) {
+            const interval = setInterval(() => setTime(time - 1, 0), 1000);
+            return () => clearInterval(interval);
+        }
+    }, [time]);
+
+    // backspace function
+    const onBackspace = () => {
+        if (currLength >= 1) {
+
+            const prevDisplay = display.slice();
+            const deletedIdx = prevDisplay[currLength - 1];
+            prevDisplay[currLength - 1] = null;
+            setDisplay(prevDisplay);
+
+            const letter = letters[deletedIdx];
+            const prevInputClasses = inputClasses.slice();
+            const index = availLetters[letter][availLetters[letter][0] - 1];
+            if (availLetters[letter][0] > 2 || availLetters[letter][0] < availLetters[letter].length) {
+                // console.log(availLetters[letter][0]);
+                //  console.log(index);
+                prevInputClasses[index] = true;
+            }
+            else {
+                prevInputClasses[deletedIdx] = true;
+            }
+            //  prevInputClasses[deletedIdx] = true;
+            setInputClasses(prevInputClasses);
+
+            setCurrLength(currLength - 1);
+
+            //    4) update availLetters by decrementing index by 1
+            let newVal = availLetters[letter].slice();
+            newVal[0] -= 1;
+            setAvailLetters({ ...availLetters, [letter]: newVal });
+        }
+    }
+
+    const onShuffle = () => {
+        let newLetters = letterSet.sort(() => Math.random() - 0.5);
+        setLetters(newLetters);
+    }
+
+    useEffect(() => {
+        const resetVals = () => {
+            // reset
+            setInputClasses(Array(size).fill(true));
+            setCurrLength(0);
+            setCurrWord("");
+            setDisplay((Array(size).fill(null)));
+
+            // format: {letter: [# of occurences, <indices of letter>]}
+            // to access
+            let initial = {};
+            for (let i = 0; i < letters.length; i++) {
+                const letter = letters[i].toUpperCase();
+                if (!(letter in initial))
+                    initial[letter] = [1, i];
+                else {
+                    initial[letter].push(i);
+                }
+            }
+            setAvailLetters(initial);
+        }
+        resetVals();
+    }, [letters]);
+
+    // handles key presses
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event) {
+                // valid letter
+                if (letters.includes(event.key.toUpperCase())) {
+                    const letter = event.key.toUpperCase();
+                    if (availLetters[letter][0] < availLetters[letter].length) {
+                        const prevDisplay = display.slice();
+                        const prevInputClasses = inputClasses.slice();
+
+                        // set clicked letter to inactive, update display index
+                        let index = availLetters[letter][availLetters[letter][0]];
+                        prevInputClasses[index] = false;
+                        prevDisplay[currLength] = index;
+                        // update length
+                        setCurrLength(currLength + 1);
+
+                        // update input classes and display
+                        setInputClasses(prevInputClasses);
+                        setDisplay(prevDisplay);
+                        console.log(prevDisplay);
+                        let newVal = availLetters[letter].slice();
+                        newVal[0] += 1;
+                        console.log(newVal);
+                        setAvailLetters({ ...availLetters, [letter]: newVal });
+                    }
+                }
+                // delete button
+                else if (event.key === "Backspace") {
+                    onBackspace();
+                }
+                else if (event.key === "Enter") {
+                    console.log("Entering!");
+                    onSubmit();
+                }
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+        handleKeyDown();
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+    );
+
+    // handles clicking on the big letters at the top
+    // Purpose: Deletes the letter and (if neccessary) shifts the letters
+    const handleDisplayClick = (clickedIndex) => {
+        if (currLength > 0 && display[clickedIndex] !== null) {
+            let prevDisplay = display.toSpliced(clickedIndex, 1);
+            prevDisplay.push(null);
+
+            const letter = letters[display[clickedIndex]];
+
+            // if repeat, get the largest index of the clicked letter
+            const index = availLetters[letter][availLetters[letter][0] - 1];
+
+            const prevInputClasses = inputClasses.slice();
+            if (availLetters[letter][0] > 2 || availLetters[letter][0] < availLetters[letter].length) {
+                //      console.log(availLetters[letter][0]);
+                //      console.log(index);
+                prevInputClasses[index] = true;
+            }
+            else
+                prevInputClasses[display[clickedIndex]] = true;
+
+            console.log(prevDisplay);
+            // issue: figure out how to update availLetters when something IN THE MIDDLE is clicked
+            let newVal = availLetters[letter].slice();
+            newVal[0] -= 1;
+            console.log(newVal);
+
+            setDisplay(prevDisplay);
+            setCurrLength(currLength - 1);
+            setInputClasses(prevInputClasses);
+            setAvailLetters({ ...availLetters, [letter]: newVal });
+        }
+    }
+
+    // handles clicking on the input letters at the bottom
+    const handleInputClick = (clickedIndex) => {
+        console.log(clickedIndex);
+        // create copies
+        const prevDisplay = display.slice();
+        const prevInputClasses = inputClasses.slice();
+
+        // set clicked letter to inactive, update display index
+        prevInputClasses[clickedIndex] = false;
+        prevDisplay[currLength] = clickedIndex;
+
+        let newVal = availLetters[letters[clickedIndex]].slice();
+        newVal[0] += 1;
+        setAvailLetters({ ...availLetters, [letters[clickedIndex]]: newVal });
+
+        // update length
+        setCurrLength(currLength + 1);
+
+        console.log(prevDisplay);
+        console.log(newVal);
+        // update input classes and display
+        setInputClasses(prevInputClasses);
+        setDisplay(prevDisplay);
+
+    }
+
+
+    const resetBoard = () => {
+        setAvailLetters(initialAvailLetters);
+        setDisplay(Array(size).fill(null));
+        setInputClasses(Array(size).fill(true));
+        setCurrWord("");
+        setCurrLength(0);
+    }
+    // handles submitting or clicking enter 
+    // Purpose: Check if word is valid, 
+
+
+    // CURRENT BUG: if clicks are used at all, it gets fucked up when you type enter
+    const onSubmit = () => {
+        if (currLength >= 3) {
+            const word = display.map((index) => letters[index]).join("");
+            setCurrWord(word);
+
+        }
+        setTimeout(() => {
+            resetBoard();
+            setFeedback("inactive");
+        }, 750)
+    }
+
+    // check valid word when currWord changes
+
+    const updateScore = (correct) => {
+        setFeedback("active")
+        console.log(currWord);
+        if (correct) {
+            setScore(score + scores[currLength]);
+            setWordBank({ ...wordBank, [currWord]: scores[currLength] });
+            setFeedbackMessage(`${currWord.toLowerCase()} +${scores[currLength]}`);
+        }
+        else {
+            setFeedbackMessage("Word has already been used");
+        }
+    }
+    useEffect(() => {
+        const fetchWord = async () => {
+            await fetch(`${API_URL}${currWord.toLowerCase()}/definitions`, options)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.word) {
+                        console.log(data)
+                        if (!(currWord in wordBank)) {
+                            updateScore(true, data.word);
+                        }
+                        else {
+                            updateScore(false, data.word);
+                        }
+                    }
+                    else if (data.success === false) {
+                        setFeedback("active");
+                        setFeedbackMessage("Not a word");
+
+                    }
+                })
+        };
+        fetchWord()
+    }, [currWord])
+
+    return (
+        <div className="game-body">
+            {time ? <><div className="score-main">
+                <span >Score: </span>
+                <span className="score-val">{score}</span>
+            </div>
+                <div>
+                    <span className="time">{`Time: ${time}s`}</span>
+                </div>
+                <div className={`feedback-${feedback}`}>
+                    <span>{feedback === "active" ? feedbackMessage : ""}</span>
+                </div>
+                <div className="flex-letters">
+                    {letters.map((letter, idx) => (
+                        <button key={idx} type="button"
+                            onClick={() => handleDisplayClick(idx)}
+                            className={display[idx] !== null ? "active-display-letter"
+                                : "display-letter"}>
+                            {(display[idx] !== null) && letters[display[idx]]}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex-letters">
+                    {letters.map((letter, idx) => (
+                        <button key={idx} type="button" onClick={inputClasses[idx] ? () => handleInputClick(idx) : () => { }} className={inputClasses[idx] ? "active-input-letter"
+                            : "input-letter"}>{inputClasses[idx] && letter}</button>
+                    ))}
+                </div>
+                <div className="actions">
+                    <button type="button" className="submit" onClick={onSubmit}>Submit</button>
+                    <button type="button" className="backspace" onClick={onBackspace}>
+                        <span type="icon"><FaBackspace size={25} /></span>
+                    </button>
+                </div>
+                <div className="actions"> <button type="button" className="shuffle" onClick={onShuffle}>
+                    <span type="icon"><FaShuffle size={25} /></span>
+                </button>
+
+
+                </div></>
+                : <div>
+                    <GameOver wordBank={wordBank} score={score} />
+                </div>}
+        </div >
+    )
+}
