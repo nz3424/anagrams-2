@@ -3,8 +3,8 @@ import { FaBackspace } from "react-icons/fa";
 import { FaShuffle } from "react-icons/fa6"
 import GameOver from './GameOver';
 import { scores, options, API_URL, letterSets } from "../constants";
-export default function Game({ size = 6 }) {
 
+export default function Game({ size = 6 }) {
     const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
     const [letters, setLetters] = useState(letterSet);
     // array of indices of letters currently displayed (index in letters)
@@ -45,7 +45,7 @@ export default function Game({ size = 6 }) {
 
     // timer
     useEffect(() => {
-        if (time > 30) {
+        if (time > 0) {
             const interval = setInterval(() => setTime(time - 1, 0), 1000);
             return () => clearInterval(interval);
         }
@@ -83,13 +83,15 @@ export default function Game({ size = 6 }) {
         }
     }
 
+    // shuffles the letters, clears the board
     const onShuffle = () => {
-        let newLetters = letterSet.sort(() => Math.random() - 0.5);
+        let newLetters = letters.slice().sort(() => Math.random() - 0.5);
         setLetters(newLetters);
     }
 
+    // changes the underlying settings after the shuffle
     useEffect(() => {
-        const resetVals = () => {
+        const shuffleReset = () => {
             // reset
             setInputClasses(Array(size).fill(true));
             setCurrLength(0);
@@ -109,7 +111,7 @@ export default function Game({ size = 6 }) {
             }
             setAvailLetters(initial);
         }
-        resetVals();
+        shuffleReset();
     }, [letters]);
 
     // handles key presses

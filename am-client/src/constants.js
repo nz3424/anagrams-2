@@ -16,6 +16,8 @@ export const options = {
 
 export const letterSets = [
     ["A", "S", "T", "E", "T", "R"], ["N", "M", "A", "E", "I", "R"], ["P", "L", "T", "E", "C", "A"],
+    ["O", "P", "U", "E", "T", "R"], ["R", "S", "S", "E", "U", "C"], ["B", "K", "I", "M", "C", "N"],
+    ["V", "E", "N", "T", "O", "R"],
 ];
 
 
