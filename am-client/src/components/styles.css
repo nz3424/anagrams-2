@@ -7,6 +7,16 @@ span {
     font-size: 1.5rem;
 }
 
+.main-login {
+    width: 100vw;
+    height: 100vh;
+    background: var(--black-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
 .main-home-bg {
     width: 100vw;
     height: 100vh;
@@ -14,8 +24,8 @@ span {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
 }
+
 
 .main-home-gamelogs {
     background: var(--gray-bg);
@@ -127,6 +137,7 @@ span {
     font-weight: 800;
     cursor: pointer;
     transition: all 100ms ease-in;
+    text-align: center;
 
 
 }
@@ -151,6 +162,12 @@ span {
     text-align: center;
     transition: all 100ms ease-in;
 
+}
+
+.active-display-letter:hover,
+.active-input-letter:hover {
+    outline: solid 2px var(--dark-yellow);
+    box-shadow: inset 3px 3px 0.4px var(--dark-yellow);
 }
 
 .actions {
