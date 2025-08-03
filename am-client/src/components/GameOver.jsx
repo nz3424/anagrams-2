@@ -3,6 +3,9 @@ import "./styles.css";
 import { NavLink } from 'react-router-dom';
 
 const GameOver = ({ wordBank, score }) => {
+
+    // word bank to be displayed
+    // sorted by length, tiebreaker is lexicographic
     const sortedWordBank = Object.keys(wordBank).sort((a, b) =>
         wordBank[b] - wordBank[a] || a.localeCompare(b)
     );

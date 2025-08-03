@@ -5,8 +5,12 @@ import GameOver from './GameOver';
 import { scores, options, API_URL, letterSets } from "../constants";
 
 export default function Game({ size = 6 }) {
+    // unordered set of letters to be used
     const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
+
+    // *ordered* set of letters displayed
     const [letters, setLetters] = useState(letterSet);
+
     // array of indices of letters currently displayed (index in letters)
     const [display, setDisplay] = useState(Array(size).fill(null));
 
@@ -16,18 +20,24 @@ export default function Game({ size = 6 }) {
     // length of current string
     const [currLength, setCurrLength] = useState(0);
 
-
+    // current word, score
     const [currWord, setCurrWord] = useState("");
     const [score, setScore] = useState(0);
 
+    // sets the feedback after submitting a word
     const [feedback, setFeedback] = useState("inactive");
     const [feedbackMessage, setFeedbackMessage] = useState("");
 
+    // all words seen so far
+    // format: key: word, value: score
     const [wordBank, setWordBank] = useState({});
 
 
     // format: {letter: [# of occurences, <indices of letter>]}
-    // to access
+    // to access: 
+    // desired index: availLetters[<letter>][0]
+    // syntax: availLetters[<letter>][availLetters[<letter>][0]]
+    // handling: Change desired index to change position
     const initialAvailLetters = {};
     for (let i = 0; i < letters.length; i++) {
         const letter = letters[i].toUpperCase();
@@ -39,11 +49,13 @@ export default function Game({ size = 6 }) {
     }
     const [availLetters, setAvailLetters] = useState(initialAvailLetters);
 
+
+    // time
     const [time, setTime] = useState(30);
 
 
 
-    // timer
+    // timer, countsdown from time to 0
     useEffect(() => {
         if (time > 0) {
             const interval = setInterval(() => setTime(time - 1, 0), 1000);
@@ -69,6 +81,7 @@ export default function Game({ size = 6 }) {
                 prevInputClasses[index] = true;
             }
             else {
+                // only one occurrance of the letter (I think)
                 prevInputClasses[deletedIdx] = true;
             }
             //  prevInputClasses[deletedIdx] = true;
@@ -76,7 +89,7 @@ export default function Game({ size = 6 }) {
 
             setCurrLength(currLength - 1);
 
-            //    4) update availLetters by decrementing index by 1
+            //   update availLetters by decrementing index by 1
             let newVal = availLetters[letter].slice();
             newVal[0] -= 1;
             setAvailLetters({ ...availLetters, [letter]: newVal });
@@ -121,6 +134,7 @@ export default function Game({ size = 6 }) {
                 // valid letter
                 if (letters.includes(event.key.toUpperCase())) {
                     const letter = event.key.toUpperCase();
+                    // check to make sure all of this letter hasn't been used up
                     if (availLetters[letter][0] < availLetters[letter].length) {
                         const prevDisplay = display.slice();
                         const prevInputClasses = inputClasses.slice();
@@ -252,12 +266,14 @@ export default function Game({ size = 6 }) {
         if (correct) {
             setScore(score + scores[currLength]);
             setWordBank({ ...wordBank, [currWord]: scores[currLength] });
-            setFeedbackMessage(`${currWord.toLowerCase()} +${scores[currLength]}`);
+            setFeedbackMessage(`${currWord} +${scores[currLength]}`);
         }
         else {
             setFeedbackMessage("Word has already been used");
         }
     }
+
+    // checks if word is valid
     useEffect(() => {
         const fetchWord = async () => {
             await fetch(`${API_URL}${currWord.toLowerCase()}/definitions`, options)
