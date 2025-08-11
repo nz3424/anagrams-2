@@ -2,17 +2,11 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./styles.css";
 import { letterSets } from './constants';
-import { StreamChat } from "stream-chat"
 import Cookies from "universal-cookie";
 import { useStateContext } from './contexts/ContextProvider';
 
 
 import { Home, Game, Login, SignUp } from './components';
-
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/firestore";
-import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function App() {
     const size = 6;
@@ -20,29 +14,39 @@ export default function App() {
 
     const api_key = "egbeshbpypm3";
     const cookies = new Cookies();
-    const client = StreamChat.getInstance(api_key);
     const token = cookies.get("token");
     const [isAuth, setIsAuth] = useState(false);
 
     // connect user to account
     if (token) {
-        const name = cookies.get("username");
-        client.connectUser({
-            id: cookies.get("userId"),
-            name,
-            hashedPassword: cookies.get("hashedPassword"),
-        }, token)
-            .then((user) => {
-                setIsAuth(true)
+        fetch("http://localhost:3001/me", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Invalid token");
+                return res.json();
             })
+            .then(data => {
+                const user = data.user;
+                setIsAuth(true);
+                setActiveUser(user.username);
+                // Save other user data you want to state if needed
+            })
+            .catch(() => {
+                // Token invalid or expired — force logout or clear cookies
+                cookies.remove("token");
+                setIsAuth(false);
+            });
     }
+
     const logout = () => {
         cookies.remove("token");
         cookies.remove("username");
-        cookies.remove("password");
-        cookies.remove("userId");
-        cookies.remove("hashedPassword");
-        client.disconnectUser();
+        cookies.remove("id");
+        setIsAuth(false);
     }
 
     return (

@@ -17,20 +17,29 @@ const SignUp = ({ setIsAuth }) => {
         navigate(link);
     }
     const signUp = () => {
-        Axios.post("http://localhost:3001/signup", user)
+        fetch("http://localhost:3001/signup", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+        }).then(res => {
+            if (!res.ok) throw new Error(`Signup failed: ${res.statusText}`);
+            return res.json();
+        })
             .then(res => {
-                const { token, username, password, userId, hashedPassword } = res.data;
+                console.log("Response from server on signup: ", res);
+                const { token, username, id } = res;
                 cookies.set("token", token);
                 cookies.set("username", username);
-                cookies.set("password", password);
-                cookies.set("userId", userId);
-                cookies.set("hashedPassword", hashedPassword);
+                cookies.set("id", id);
                 setIsAuth(true);
                 setActiveUser(username);
                 navigateTo("/home");
-
             })
-    }
+            .catch(error => {
+                console.error("Error during signup: ", error);
+                alert("Signup failed");
+            });
+    };
     // handles key presses
     useEffect(() => {
         const handleKeyDown = (event) => {

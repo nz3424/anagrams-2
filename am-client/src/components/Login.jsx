@@ -19,24 +19,27 @@ const Login = ({ setIsAuth }) => {
 
     const cookies = new Cookies();
     const login = () => {
-        Axios.post("http://localhost:3001/login", { username, password })
-            .then((res) => {
-                console.log("Response from server: ", res);
-                const { token, username, userId } = res.data;
-                cookies.set("token", token);
-                cookies.set("username", username);
-                cookies.set("userId", userId);
-                setIsAuth(true);
-                setActiveUser(username);
-                navigateTo("/home");
-            })
-            .catch((error) => {
-                console.error("Login error: ", error);
-                alert("Login failed. Please check your username and password.");
-            }
-            );
+        fetch("http://localhost:3001/login", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        }).then((res) => {
+            if (!res.ok) throw new Error(`Login failed: ${res.statusText}`);
+            return res.json();
+        }).then((res) => {
+            console.log("Response from server ", res);
+            const { token, username, id } = res;
+            cookies.set("token", token);
+            cookies.set("username", username);
+            cookies.set("id", id);
+            setIsAuth(true);
+            setActiveUser(username);
+            navigateTo("/home");
+        }).catch(error => {
+            console.log("Error during login: ", error);
+            alert("Login failed. Please check your username and password.");
+        });
     }
-
     // handles key presses
     useEffect(() => {
         const handleKeyDown = (event) => {
