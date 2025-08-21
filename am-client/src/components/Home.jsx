@@ -7,34 +7,16 @@ import { useStateContext } from '../contexts/ContextProvider';
 import Cookies from "universal-cookie";
 import Axios from "axios";
 
-const handlePostClick = (activeUser) => {
-    Axios.post("http://localhost:3001/home", { score: '400', username: activeUser })
-        .then(res => {
-            console.log(res);
-            // setLeaders(leaders.append(res))
-        })
-}
-
 
 export default function Home({ onLogout }) {
-    const [leaders, setLeaders] = useState();
-    const { activeUser, setActiveUser } = useStateContext();
-
-    /*   useEffect(() => {
-           Axios.get("http://localhost:3001/home")
-               .then(data => console.log(data))
-       }, []);*/
-
-
-    const navigate = useNavigate();
-
-    const navigateTo = (link) => {
-        navigate(link);
+    const { activeUser, setRoute } = useStateContext();
+    if (!activeUser) {
+        return;
     }
+
     const logout = () => {
-        console.log("Logging out");
         onLogout();
-        navigateTo('/login');
+        setRoute('login');
     }
     return (
         <div className="main-home-bg">
@@ -46,7 +28,7 @@ export default function Home({ onLogout }) {
 
             <div className="main-home-right">
                 <div className="user-headline">
-                    <span className="user-text">{activeUser}</span>
+                    <span className="user-text">{activeUser.username}</span>
                     <button
                         onClick={() => logout()}>Logout</button>
                 </div>
@@ -55,7 +37,7 @@ export default function Home({ onLogout }) {
                     <FaPlay
                         className="play-icon"
                         size='2vw'
-                        onClick={() => navigateTo("/game")} />
+                        onClick={() => setRoute("game")} />
                 </div>
                 <div className="main-home-stats"><p className="home-text">Statistics</p>
                     <div className="stats-body">
@@ -66,10 +48,10 @@ export default function Home({ onLogout }) {
                         <div className="stats-text">
                             <p className="home-text-label">Highest Score:</p>
 
-                            <p>10-4</p>
+                            <p>{activeUser.high_score}</p>
                         </div>
                         <div className="stats-text"><p className="home-text-label">Games played:</p>
-                            <p>10-4</p>
+                            <p>{activeUser.games_played}</p>
                         </div>
                     </div>
                 </div>

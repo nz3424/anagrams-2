@@ -3,7 +3,8 @@ import { FaBackspace } from "react-icons/fa";
 import { FaShuffle } from "react-icons/fa6"
 import GameOver from './GameOver';
 import { scores, options, API_URL, letterSets } from "../constants";
-
+import { useStateContext } from '../contexts/ContextProvider';
+import Cookies from "universal-cookie";
 export default function Game({ size = 6 }) {
     // unordered set of letters to be used
     const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
@@ -32,7 +33,7 @@ export default function Game({ size = 6 }) {
     // format: key: word, value: score
     const [wordBank, setWordBank] = useState({});
 
-
+    const { activeUser } = useStateContext();
     // format: {letter: [# of occurences, <indices of letter>]}
     // to access: 
     // desired index: availLetters[<letter>][0]
@@ -76,8 +77,6 @@ export default function Game({ size = 6 }) {
             const prevInputClasses = inputClasses.slice();
             const index = availLetters[letter][availLetters[letter][0] - 1];
             if (availLetters[letter][0] > 2 || availLetters[letter][0] < availLetters[letter].length) {
-                // console.log(availLetters[letter][0]);
-                //  console.log(index);
                 prevInputClasses[index] = true;
             }
             else {
@@ -149,10 +148,8 @@ export default function Game({ size = 6 }) {
                         // update input classes and display
                         setInputClasses(prevInputClasses);
                         setDisplay(prevDisplay);
-                        console.log(prevDisplay);
                         let newVal = availLetters[letter].slice();
                         newVal[0] += 1;
-                        console.log(newVal);
                         setAvailLetters({ ...availLetters, [letter]: newVal });
                     }
                 }
@@ -161,7 +158,6 @@ export default function Game({ size = 6 }) {
                     onBackspace();
                 }
                 else if (event.key === "Enter") {
-                    console.log("Entering!");
                     onSubmit();
                 }
             }
@@ -187,8 +183,6 @@ export default function Game({ size = 6 }) {
 
             const prevInputClasses = inputClasses.slice();
             if (availLetters[letter][0] > 2 || availLetters[letter][0] < availLetters[letter].length) {
-                //      console.log(availLetters[letter][0]);
-                //      console.log(index);
                 prevInputClasses[index] = true;
             }
             else
@@ -297,6 +291,42 @@ export default function Game({ size = 6 }) {
         };
         fetchWord()
     }, [currWord])
+
+    const cookies = new Cookies();
+
+    const endGame = (score) => {
+        fetch("http://localhost:3001/score", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${cookies.get("token")}`
+            },
+            body: JSON.stringify({
+                score: score,
+                user: activeUser,
+                letter_set: letterSet.sort().join("")
+            })
+        }).then(res => {
+            if (!res.ok) throw new Error(`Score submission failed: ${res.statusText}`);
+            return res.json();
+        })
+            .then(res => {
+                console.log("Response from server on score submission: ", res);
+            })
+            .catch(error => {
+                console.error("Error during score submission: ", error);
+                alert("Score submission failed");
+            })
+    }
+    // handles game completion
+    useEffect(() => {
+        if (time === 0) {
+            console.log("Game over!");
+            setFeedback("inactive");
+            setTime(null);
+            endGame(score);
+        }
+    }, [time, score]);
 
     return (
         <div className="game-body">

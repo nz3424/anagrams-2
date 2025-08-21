@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import "./styles.css";
-import { useNavigate } from 'react-router-dom';
 import Axios from "axios";
 import Cookies from "universal-cookie";
 import { useStateContext } from '../contexts/ContextProvider';
@@ -10,12 +9,7 @@ const Login = ({ setIsAuth }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    const navigate = useNavigate();
-
-    const navigateTo = (link) => {
-        navigate(link);
-    }
-    const { activeUser, setActiveUser } = useStateContext();
+    const { activeUser, setActiveUser, setRoute } = useStateContext();
 
     const cookies = new Cookies();
     const login = () => {
@@ -34,7 +28,7 @@ const Login = ({ setIsAuth }) => {
             cookies.set("id", id);
             setIsAuth(true);
             setActiveUser(username);
-            navigateTo("/home");
+            setRoute("home");
         }).catch(error => {
             console.log("Error during login: ", error);
             alert("Login failed. Please check your username and password.");

@@ -1,6 +1,5 @@
-import React from 'react'
 import "./styles.css";
-import { NavLink } from 'react-router-dom';
+import { useStateContext } from '../contexts/ContextProvider';
 
 const GameOver = ({ wordBank, score }) => {
 
@@ -9,6 +8,7 @@ const GameOver = ({ wordBank, score }) => {
     const sortedWordBank = Object.keys(wordBank).sort((a, b) =>
         wordBank[b] - wordBank[a] || a.localeCompare(b)
     );
+    const { setRoute } = useStateContext();
 
 
     return (
@@ -33,7 +33,7 @@ const GameOver = ({ wordBank, score }) => {
                 </div>))}
             </div>
             <div style={{ margin: '1vh 0' }}>
-                <NavLink to="/home" className="return-home"> Back to Home</NavLink>
+                <button className="return-home" onClick={() => setRoute("home")}> Back to Home</button>
             </div>
         </div>
     )

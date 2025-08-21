@@ -9,20 +9,15 @@ import { useStateContext } from '../contexts/ContextProvider';
 const SignUp = ({ setIsAuth }) => {
     const cookies = new Cookies();
     const [user, setUser] = useState(null);
-    const { activeUser, setActiveUser } = useStateContext();
+    const { activeUser, setActiveUser, setRoute } = useStateContext();
 
-    const navigate = useNavigate();
-
-    const navigateTo = (link) => {
-        navigate(link);
-    }
     const signUp = () => {
         fetch("http://localhost:3001/signup", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user)
         }).then(res => {
-            if (!res.ok) throw new Error(`Signup failed: ${res.statusText}`);
+            if (!res.ok) throw new Error(`Signup failed: ${res.json().error}`);
             return res.json();
         })
             .then(res => {
@@ -33,7 +28,7 @@ const SignUp = ({ setIsAuth }) => {
                 cookies.set("id", id);
                 setIsAuth(true);
                 setActiveUser(username);
-                navigateTo("/home");
+                setRoute("home");
             })
             .catch(error => {
                 console.error("Error during signup: ", error);
