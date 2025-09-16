@@ -33,7 +33,7 @@ export default function Game({ size = 6 }) {
     // format: key: word, value: score
     const [wordBank, setWordBank] = useState({});
 
-    const { activeUser } = useStateContext();
+    const { activeUser, setUserNeedsRefresh } = useStateContext();
     // format: {letter: [# of occurences, <indices of letter>]}
     // to access: 
     // desired index: availLetters[<letter>][0]
@@ -52,7 +52,7 @@ export default function Game({ size = 6 }) {
 
 
     // time
-    const [time, setTime] = useState(30);
+    const [time, setTime] = useState(10);
 
 
 
@@ -312,6 +312,7 @@ export default function Game({ size = 6 }) {
         })
             .then(res => {
                 console.log("Response from server on score submission: ", res);
+                setUserNeedsRefresh(true);
             })
             .catch(error => {
                 console.error("Error during score submission: ", error);

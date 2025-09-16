@@ -27,7 +27,7 @@ const SignUp = ({ setIsAuth }) => {
                 cookies.set("username", username);
                 cookies.set("id", id);
                 setIsAuth(true);
-                setActiveUser(username);
+                setActiveUser({ ...activeUser, username: username, id: id });
                 setRoute("home");
             })
             .catch(error => {

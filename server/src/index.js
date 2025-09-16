@@ -65,9 +65,6 @@ app.post("/signup", async (req, res) => {
         res.status(500).json({ error: "Signup did not work" })
     }
 })
-app.get("/ping", (req, res) => {
-    res.json({ message: "pong" });
-});
 
 app.post("/login", async (req, res) => {
     try {
@@ -128,6 +125,68 @@ app.get('/me', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch user info' });
+    }
+});
+
+app.post('/friend-request', authenticateToken, async (req, res) => {
+    try {
+        const { username } = req.body;
+        const userId = req.user.id;
+
+        // find id of requested friend
+        const [users] = await db.query('SELECT id from users WHERE username = ?', [username]);
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const friendId = users[0].id;
+
+        // insert friend request into friendship table
+        await db.query('INSERT INTO friendships (requester_id, addressee_id) VALUES (?, ?)', [userId, friendId]);
+        res.json({ message: 'Friend request sent' });
+    }
+    catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: 'Friend request already sent' });
+        }
+        console.error(error);
+        res.status(500).json({ error: 'Failed to send friend request' });
+    }
+}
+);
+
+app.get('/friends', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        // get list of users where friendship is accepted
+        const [friends] = await db.query(`SELECT u.id, u.username
+        FROM friendships f
+        JOIN users u ON (
+            (f.requester_id = ? AND f.addressee_id = u.id) OR
+            (f.addressee_id = ? AND f.requester_id = u.id)
+        )
+        WHERE f.status = 'accepted'`, [userId, userId]);
+        res.json({ friends });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch friends' });
+    }
+});
+
+app.get("/friends/pending/received", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const [requests] = await db.query(
+            `SELECT f.id AS friendship_id, u.id AS requester_id, u.username AS requester_name
+       FROM friendships f
+       JOIN users u ON f.requester_id = u.id
+       WHERE f.addressee_id = ? AND f.status = 'pending'`,
+            [userId]
+        );
+        res.json(requests);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch pending received requests" });
     }
 });
 console.log(

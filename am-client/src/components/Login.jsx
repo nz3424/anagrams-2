@@ -27,7 +27,7 @@ const Login = ({ setIsAuth }) => {
             cookies.set("username", username);
             cookies.set("id", id);
             setIsAuth(true);
-            setActiveUser(username);
+            setActiveUser({ ...activeUser, username: username, id: id });
             setRoute("home");
         }).catch(error => {
             console.log("Error during login: ", error);
@@ -58,7 +58,7 @@ const Login = ({ setIsAuth }) => {
             <button className="login-button" type="button" onClick={() => { login() }}>Login</button>
             <div>
                 <span className="login-to-signup" >Don't have an account? Sign up </span>
-                <a href="/signup">here</a>
+                <a onClick={() => { setRoute("signup") }}>here</a>
             </div>
 
         </div>

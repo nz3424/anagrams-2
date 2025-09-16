@@ -3,9 +3,9 @@
 
 
 :root {
-    --black-bg: #0B0B0B;
-    --gray-bg: #363636;
-    --light-gray-bg: #7C7C7C;
+    --black-bg: #1a1a1a;
+    --gray: #252525;
+    --light-gray: #404040;
     --yellow: #ECE391;
     --dark-yellow: #BDB574;
 }

@@ -1,10 +1,34 @@
 button {
     border-style: none;
     font-family: 'Poppins', sans-serif;
+    border-radius: 0.5rem;
+    color: black;
 }
 
-span {
-    font-size: 1.5rem;
+button:hover {
+    background: var(--yellow)
+}
+
+span,
+p {
+    font-size: 1rem;
+    margin: 0.5rem;
+
+}
+
+.home-container {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    background: var(--black-bg);
+
+}
+
+.stats-text {
+    display: flex;
+    justify-content: space-between;
+    margin-inline: 5%;
+    color: white;
 }
 
 .main-login {
@@ -19,89 +43,78 @@ span {
 }
 
 
-.main-home-bg {
-    width: 100vw;
-    height: 100vh;
-    background: var(--black-bg);
+.home-header {
+    position: absolute;
+    width: 100%;
+    padding: 0 1rem;
+    height: 5rem;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+    box-sizing: border-box;
 }
+
+
+.home-body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 3rem;
+}
+
+.home-card {
+    width: 100%;
+    background: var(--gray);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.5rem;
+    border: 0.1rem solid var(--light-gray);
+    padding: 1rem 0;
+    box-sizing: border-box;
+}
+
+.home-grid-container {
+    padding-top: 7.5rem;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2rem;
+}
+
 
 
 .user-headline {
-    width: 100%;
-    height: 5vh;
-    font-weight: 600;
     color: white;
     display: flex;
     justify-content: right;
+    max-height: 100%;
 }
 
-.user-text {
-    margin-right: 5vw;
-}
-
-.main-home-gamelogs {
-    background: var(--gray-bg);
-    margin: 5vw 6vw;
-    border-radius: 5vw;
-    width: 38vw;
-    height: 90vh;
-
+.home-text.user {
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    background: var(--gray);
+    border-radius: 0.5rem;
+    padding: 0 0.5rem;
 }
 
 .home-text {
     text-align: center;
-    font-weight: 600;
     color: white;
-    font-size: 1.5rem;
-}
-
-.main-home-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: center;
-    flex-wrap: wrap;
-
-}
-
-.main-home-extra {
-    background: var(--gray-bg);
-    margin: 1.5vw 6vw;
-    border-radius: 5vw;
-    width: 38vw;
-    height: 40vh;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: column;
-}
-
-
-
-.play-button {
-    width: max(3.8125vw, 5vh);
-    height: max(3.8125vw, 5vh);
-    border-radius: max(1.5vw, 2vh);
-    border-style: hidden;
-    background: var(--yellow);
-    color: var(--black-bg);
-    text-decoration: none;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 1vw;
-}
-
-.play-button:hover {
-    box-shadow: inset 1px -1px 2px var(--dark-yellow);
+    font-size: 1rem;
 }
 
 .play-icon:hover {
-    fill: var(--dark-yellow);
+    fill: var(--yellow);
 }
 
 .game-body {
@@ -138,7 +151,7 @@ span {
 }
 
 .display-letter {
-    background-color: var(--light-gray-bg);
+    background-color: var(--light-gray);
     height: 13vw;
     width: 12vw;
     border-radius: 4vw;
@@ -160,7 +173,7 @@ span {
 
 
 .input-letter {
-    background-color: var(--gray-bg);
+    background-color: var(--gray);
     height: 7vw;
     width: 12vw;
     border-radius: 2.5vw;
@@ -195,7 +208,7 @@ span {
 }
 
 .submit {
-    background-color: var(--light-gray-bg);
+    background-color: var(--light-gray);
     height: 8vh;
     width: 8vw;
     border-radius: 2vw;
@@ -205,7 +218,7 @@ span {
 }
 
 .backspace {
-    background-color: var(--light-gray-bg);
+    background-color: var(--light-gray);
     height: 8vh;
     width: 8vw;
     border-radius: 2vw;
@@ -215,7 +228,7 @@ span {
 }
 
 .shuffle {
-    background-color: var(--light-gray-bg);
+    background-color: var(--light-gray);
     height: 8vh;
     width: 8vw;
     border-radius: 2vw;
@@ -248,7 +261,7 @@ span {
     height: 5vh;
     border-radius: 2vw;
     background: var(--black-bg);
-    border: 1px var(--light-gray-bg) solid;
+    border: 1px var(--light-gray) solid;
 }
 
 .feedback-active {
@@ -266,7 +279,7 @@ span {
 }
 
 .score-box {
-    background: var(--gray-bg);
+    background: var(--gray);
     border-radius: 1.7vw;
     margin-top: 5vh;
     width: 38vw;
@@ -297,7 +310,7 @@ span {
 }
 
 .results {
-    background: var(--gray-bg);
+    background: var(--gray);
     border-radius: 6vw;
     margin-top: 2vh;
     width: 40vw;
@@ -396,66 +409,35 @@ span {
         font-size: 2rem;
     }
 
-    .main-home-bg {
-        flex-direction: column;
-        justify-content: space-around;
-    }
 
-    .main-home-gamelogs {
-        height: 75vh;
-        width: 70%;
-    }
-
-    .main-home-right {
-        flex-direction: row;
-        justify-content: space-between;
-        margin: 5vh 0;
-
-    }
-
-    .main-home-extra {
-        height: 10vh;
-        display: flex;
-        justify-content: space-between;
-
-    }
-
-    .play-button {}
-
-
-
-    .home-text {
+    .login-to-signup {
         font-size: 1rem;
     }
 
-}
+    .login-inputs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
 
-.login-to-signup {
-    font-size: 1rem;
-}
-
-.login-inputs {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-}
-
-.login-inputs input {
-    height: 5vh;
-    width: 20vw;
-    margin-bottom: 2vh;
-    border-radius: 100000px;
-    border: 3px solid var(--yellow);
-}
+    .login-inputs input {
+        height: 5vh;
+        width: 20vw;
+        margin-bottom: 2vh;
+        border-radius: 100000px;
+        border: 3px solid var(--yellow);
+    }
 
 
-.login-button {
-    height: 5vh;
-    width: 10vw;
-    border-radius: 100px;
-    margin: 5px 0;
-    background: var(--yellow);
-    cursor: pointer;
+    .login-button {
+        height: 5vh;
+        width: 10vw;
+        border-radius: 100px;
+        margin: 5px 0;
+        background: var(--yellow);
+        cursor: pointer;
+    }
 }
 
 label {
@@ -476,28 +458,10 @@ input {
     outline: none;
 }
 
-.main-home-stats {
-    background: var(--gray-bg);
-    margin: 1.5vw 6vw;
-    border-radius: 5vw;
-    width: 38vw;
-    height: 40vh;
+.login-inputs {
     display: flex;
     align-items: center;
+    justify-content: center;
     flex-direction: column;
-}
-
-
-.stats-body {
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    color: white;
-    flex-direction: column;
-}
-
-.stats-text {
-    display: flex;
-    justify-content: space-between;
-    margin-inline: 5%;
+    gap: 0.25rem;
 }

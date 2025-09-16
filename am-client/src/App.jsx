@@ -15,7 +15,8 @@ export default function App() {
     const cookies = new Cookies();
     const token = cookies.get("token");
     const [isAuth, setIsAuth] = useState(false);
-    const { activeUser, setActiveUser, route, setRoute } = useStateContext();
+
+    const { activeUser, setActiveUser, route, setRoute, userNeedsRefresh, setUserNeedsRefresh } = useStateContext();
     // connect user to account
     useEffect(() => {
         if (token) {
@@ -33,6 +34,7 @@ export default function App() {
                     const user = data.user;
                     setIsAuth(true);
                     setActiveUser(user);
+
                     console.log("User data fetched: ", user);
                     // Save other user data you want to state if needed
                 })
@@ -42,7 +44,54 @@ export default function App() {
                     setIsAuth(false);
                 });
         }
-    }, [token]); //TODO: Add some state that says refresh needs to be triggered
+        fetch("http://localhost:3001/friends",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then(res => {
+                if (!res.ok) throw new Error("Failed to fetch friends");
+                return res.json();
+            }).then(data => {
+                // add friends to user context
+                if (activeUser) {
+                    console.log("Active user in setting frineds: ", activeUser);
+                    setActiveUser({ ...activeUser, friends: data.friends });
+                    setUserNeedsRefresh(false); // reset trigger
+
+
+                }
+
+                console.log("Friends data: ", data);
+            }).catch(error => {
+                console.error("Error fetching friends: ", error);
+            }
+            );
+        fetch("http://localhost:3001/friends/pending/received", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        }).then(res => {
+            if (!res.ok) throw new Error("Failed to fetch friend requests");
+            return res.json();
+        }).then(data => {
+            // TODO: Add requests to user context so it can be displayed in friends card
+            console.log(data);
+            if (activeUser) {
+                setActiveUser({ ...activeUser, requests: data });
+                setUserNeedsRefresh(false); // reset trigger
+            }
+            console.log("Friend requests data: ", data);
+        }).catch(error => {
+            console.error("Error fetching friend requests: ", error);
+        }
+        );
+
+    }, [token, userNeedsRefresh]);
+    // issue: sometimes activeUser isn't set yet when getting the requests, causing requests to be undefined
 
     const logout = () => {
         cookies.remove("token");
