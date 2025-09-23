@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./styles.css";
-import { letterSets } from './constants';
-import Cookies from "universal-cookie";
 import { useStateContext } from './contexts/ContextProvider';
 
 
@@ -10,13 +7,10 @@ import { Home, Game, Login, SignUp } from './components';
 
 export default function App() {
     const size = 6;
-    const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
-
-    const cookies = new Cookies();
-    const token = cookies.get("token");
+    const token = sessionStorage.getItem("token");
     const [isAuth, setIsAuth] = useState(false);
 
-    const { activeUser, setActiveUser, route, setRoute, userNeedsRefresh, setUserNeedsRefresh } = useStateContext();
+    const { activeUser, setActiveUser, route, userNeedsRefresh, setUserNeedsRefresh, gameMode, letterSet } = useStateContext();
     // connect user to account
     useEffect(() => {
         if (token) {
@@ -31,73 +25,28 @@ export default function App() {
                     return res.json();
                 })
                 .then(data => {
-                    const user = data.user;
+                    console.log("Fetched user data: ", data);
+                    const user = data;
                     setIsAuth(true);
-                    setActiveUser(user);
-
+                    setActiveUser({ ...activeUser, ...user });
+                    setUserNeedsRefresh(false);
                     console.log("User data fetched: ", user);
                     // Save other user data you want to state if needed
                 })
                 .catch(() => {
-                    // Token invalid or expired — force logout or clear cookies
-                    cookies.remove("token");
+                    // Token invalid or expired — force logout or clear storage
+                    sessionStorage.removeItem("token");
                     setIsAuth(false);
                 });
         }
-        fetch("http://localhost:3001/friends",
-            {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }).then(res => {
-                if (!res.ok) throw new Error("Failed to fetch friends");
-                return res.json();
-            }).then(data => {
-                // add friends to user context
-                if (activeUser) {
-                    console.log("Active user in setting frineds: ", activeUser);
-                    setActiveUser({ ...activeUser, friends: data.friends });
-                    setUserNeedsRefresh(false); // reset trigger
-
-
-                }
-
-                console.log("Friends data: ", data);
-            }).catch(error => {
-                console.error("Error fetching friends: ", error);
-            }
-            );
-        fetch("http://localhost:3001/friends/pending/received", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
-        }).then(res => {
-            if (!res.ok) throw new Error("Failed to fetch friend requests");
-            return res.json();
-        }).then(data => {
-            // TODO: Add requests to user context so it can be displayed in friends card
-            console.log(data);
-            if (activeUser) {
-                setActiveUser({ ...activeUser, requests: data });
-                setUserNeedsRefresh(false); // reset trigger
-            }
-            console.log("Friend requests data: ", data);
-        }).catch(error => {
-            console.error("Error fetching friend requests: ", error);
-        }
-        );
-
     }, [token, userNeedsRefresh]);
-    // issue: sometimes activeUser isn't set yet when getting the requests, causing requests to be undefined
 
     const logout = () => {
-        cookies.remove("token");
-        cookies.remove("username");
-        cookies.remove("id");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("id");
         setIsAuth(false);
+        setActiveUser(null);
     }
 
     switch (route) {
@@ -108,10 +57,9 @@ export default function App() {
         case "home":
             return <Home onLogout={logout} />;
         case "game":
-            return <Game size={size} letterSet={letterSet} />;
+            return <Game size={size} mode={gameMode} letterSet={letterSet} />;
         default:
             return <Login setIsAuth={setIsAuth} />;
     }
-
 
 }

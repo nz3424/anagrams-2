@@ -4,10 +4,7 @@ import { FaShuffle } from "react-icons/fa6"
 import GameOver from './GameOver';
 import { scores, options, API_URL, letterSets } from "../constants";
 import { useStateContext } from '../contexts/ContextProvider';
-import Cookies from "universal-cookie";
-export default function Game({ size = 6 }) {
-    // unordered set of letters to be used
-    const letterSet = letterSets[Math.floor(Math.random() * letterSets.length)];
+export default function Game({ letterSet, size = 6, mode = "solo" }) {
 
     // *ordered* set of letters displayed
     const [letters, setLetters] = useState(letterSet);
@@ -33,7 +30,7 @@ export default function Game({ size = 6 }) {
     // format: key: word, value: score
     const [wordBank, setWordBank] = useState({});
 
-    const { activeUser, setUserNeedsRefresh } = useStateContext();
+    const { activeUser, setUserNeedsRefresh, setGameMode, setChallengeId, challengeId, setLetterSet } = useStateContext();
     // format: {letter: [# of occurences, <indices of letter>]}
     // to access: 
     // desired index: availLetters[<letter>][0]
@@ -53,7 +50,6 @@ export default function Game({ size = 6 }) {
 
     // time
     const [time, setTime] = useState(10);
-
 
 
     // timer, countsdown from time to 0
@@ -256,7 +252,6 @@ export default function Game({ size = 6 }) {
 
     const updateScore = (correct) => {
         setFeedback("active")
-        console.log(currWord);
         if (correct) {
             setScore(score + scores[currLength]);
             setWordBank({ ...wordBank, [currWord]: scores[currLength] });
@@ -274,7 +269,6 @@ export default function Game({ size = 6 }) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.word) {
-                        console.log(data)
                         if (!(currWord in wordBank)) {
                             updateScore(true, data.word);
                         }
@@ -287,24 +281,27 @@ export default function Game({ size = 6 }) {
                         setFeedbackMessage("Not a word");
 
                     }
-                })
+                }).catch(err => {
+                    console.error(err);
+                });
         };
         fetchWord()
     }, [currWord])
 
-    const cookies = new Cookies();
 
     const endGame = (score) => {
         fetch("http://localhost:3001/score", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${cookies.get("token")}`
+                Authorization: `Bearer ${sessionStorage.getItem("token")}`
             },
             body: JSON.stringify({
                 score: score,
                 user: activeUser,
-                letter_set: letterSet.sort().join("")
+                letter_set: letterSet.sort().join(""),
+                mode: mode,
+                challengeId: mode === "challenge" ? challengeId : null
             })
         }).then(res => {
             if (!res.ok) throw new Error(`Score submission failed: ${res.statusText}`);
@@ -312,7 +309,12 @@ export default function Game({ size = 6 }) {
         })
             .then(res => {
                 console.log("Response from server on score submission: ", res);
+                // reset game states
+                setGameMode("solo");
+                setChallengeId(null);
                 setUserNeedsRefresh(true);
+                sessionStorage.removeItem("letterSet");
+                setLetterSet(null);
             })
             .catch(error => {
                 console.error("Error during score submission: ", error);
@@ -322,7 +324,6 @@ export default function Game({ size = 6 }) {
     // handles game completion
     useEffect(() => {
         if (time === 0) {
-            console.log("Game over!");
             setFeedback("inactive");
             setTime(null);
             endGame(score);

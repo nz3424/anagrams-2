@@ -69,7 +69,7 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log("Login attempt for user: ", username);
+
         const [users] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
         if (users.length === 0) {
             return res.status(400).json({ error: "User not found" });
@@ -94,19 +94,58 @@ app.post("/login", async (req, res) => {
 
 app.post('/score', authenticateToken, async (req, res) => {
     try {
-        const { score, letter_set } = req.body; // get score and letter set from request body
+        const { score, letter_set, mode, challengeId } = req.body; // get score and letter set from request body
         const id = req.user.id;
 
         // do we want to add anything else?
-        await db.query('INSERT INTO games (player_id, score, letter_set) VALUES (?, ?, ?)', [id, score, letter_set]);
+        await db.query('INSERT INTO games (player_id, score, letter_set, mode, challenge_id) VALUES (?, ?, ?, ?, ?)', [id, score, letter_set, mode, challengeId || null]);
 
         // Update user's high score and games played
         await db.query('UPDATE users SET high_score = GREATEST(high_score, ?), games_played = games_played + 1 WHERE id = ?', [score, id]);
 
-        res.json({
-            message: 'Score submitted successfully with score ',
-            score: score
-        });
+        // If it's a solo game, just return
+        if (!challengeId) {
+            return res.json({ message: "Solo game saved", score });
+        }
+
+        // Get all games for this challenge
+        const [games] = await db.query(
+            `SELECT g.player_id, g.score
+     FROM games g
+     WHERE g.challenge_id = ?`,
+            [challengeId]
+        );
+
+        if (games.length < 2) {
+            return res.json({ message: "Challenge game saved, waiting for opponent", score });
+        }
+
+        // Both players submitted → finalize
+        const [playerA, playerB] = games;
+        let winnerId = null;
+        if (playerA.score > playerB.score) winnerId = playerA.player_id;
+        else if (playerB.score > playerA.score) winnerId = playerB.player_id;
+
+        await db.query(
+            `UPDATE challenges
+     SET status = 'completed' WHERE id = ?`,
+            [challengeId]
+        );
+
+        // Update users’ stats
+        if (winnerId) {
+            const loserId = (winnerId === playerA.player_id ? playerB.player_id : playerA.player_id);
+            await db.query(`UPDATE users SET wins = wins + 1 WHERE id = ?`, [winnerId]);
+            await db.query(`UPDATE users SET losses = losses + 1 WHERE id = ?`, [loserId]);
+        } else {
+            await db.query(`UPDATE users SET ties = ties + 1 WHERE id IN (?, ?)`, [
+                playerA.player_id,
+                playerB.player_id,
+            ]);
+        }
+
+        res.json({ message: "Challenge completed", winnerId, score });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to submit score' });
@@ -116,18 +155,44 @@ app.post('/score', authenticateToken, async (req, res) => {
 app.get('/me', authenticateToken, async (req, res) => {
     try {
         const id = req.user.id; // from JWT payload (set by authenticateToken middleware)
-        const [rows] = await db.query('SELECT id, username, high_score, games_played FROM users WHERE id = ?', [id]);
+        const [rows] = await db.query('SELECT id, username, high_score, games_played, wins, losses FROM users WHERE id = ?', [id]);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
         const user = rows[0];
-        res.json({ user }); // send user info back
+        const [friends] = await db.query(`SELECT u.id, u.username
+        FROM friendships f
+        JOIN users u ON (
+            (f.requester_id = ? AND f.addressee_id = u.id) OR
+            (f.addressee_id = ? AND f.requester_id = u.id)
+        )
+        WHERE f.status = 'accepted'`, [id, id]);
+        const [requests] = await db.query(
+            `SELECT f.id AS friendship_id, u.id AS requester_id, u.username AS requester_name
+       FROM friendships f
+       JOIN users u ON f.requester_id = u.id
+       WHERE f.addressee_id = ? AND f.status = 'pending'`,
+            [id]
+        );
+
+        const [challenges] = await db.query(
+            `SELECT c.id, c.created_at, u.username AS challenger_username, c.status
+       FROM challenges c
+       JOIN users u ON c.challenger_id = u.id
+       WHERE c.challenged_id = ? AND c.status = 'pending'`,
+            [id]
+        );
+        res.json({
+            username: user.username, high_score: user.high_score, games_played: user.games_played,
+            wins: user.wins, losses: user.losses, friends: friends, requests: requests, challenges: challenges
+        }); // send user info back
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch user info' });
     }
 });
 
+// create friend request:
 app.post('/friend-request', authenticateToken, async (req, res) => {
     try {
         const { username } = req.body;
@@ -154,40 +219,91 @@ app.post('/friend-request', authenticateToken, async (req, res) => {
 }
 );
 
-app.get('/friends', authenticateToken, async (req, res) => {
+// accept friend request:
+app.post("/friends/accept", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        // get list of users where friendship is accepted
-        const [friends] = await db.query(`SELECT u.id, u.username
-        FROM friendships f
-        JOIN users u ON (
-            (f.requester_id = ? AND f.addressee_id = u.id) OR
-            (f.addressee_id = ? AND f.requester_id = u.id)
+        const { requester_id } = req.body;
+        // update friendship status to accepted
+        const [result] = await db.query(
+            `UPDATE friendships set STATUS = 'accepted' WHERE requester_id = ? AND addressee_id = ? AND status = 'pending'`,
+            [requester_id, userId]
         )
-        WHERE f.status = 'accepted'`, [userId, userId]);
-        res.json({ friends });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to fetch friends' });
+        res.json({ message: "Friend request accepted" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to accept friend request" });
     }
 });
 
-app.get("/friends/pending/received", authenticateToken, async (req, res) => {
+// decline friend request:
+app.post("/friends/decline", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const [requests] = await db.query(
-            `SELECT f.id AS friendship_id, u.id AS requester_id, u.username AS requester_name
-       FROM friendships f
-       JOIN users u ON f.requester_id = u.id
-       WHERE f.addressee_id = ? AND f.status = 'pending'`,
-            [userId]
-        );
-        res.json(requests);
+        const { requester_id } = req.body;
+        // update friendship status to accepted
+        const [result] = await db.query(
+            `UPDATE friendships set STATUS = 'rejected' WHERE requester_id = ? AND addressee_id = ? AND status = 'pending'`,
+            [requester_id, userId]
+        )
+        res.json({ message: "Friend request reject" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to fetch pending received requests" });
+        res.status(500).json({ error: "Failed to reject friend request" });
     }
+});
+
+// TODO: include letter set information in front end
+app.post("/challenge", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { friend_id } = req.body;
+        const [result] = await db.query(`INSERT into challenges (challenger_id, challenged_id ) VALUES (?, ?)`, [userId, friend_id]);
+
+        res.json({ message: "Challenge sent", challengeId: result.insertId });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to send challenge" });
+    }
+});
+
+app.post("/challenges/:id/accept", authenticateToken, async (req, res) => {
+    const challengeId = req.params.id;
+    const playerId = req.user.id;
+
+    // Check if the user is the one who was challenged
+    const [rows] = await db.query(
+        `SELECT * FROM challenges 
+     WHERE id = ? AND challenged_id = ? AND status = 'pending'`,
+        [challengeId, playerId]
+    );
+    if (rows.length === 0) {
+        return res.status(403).json({ error: "You cannot accept this challenge." });
+    }
+
+    // Update status to "accepted"
+    await db.query(
+        `UPDATE challenges SET status = 'accepted' WHERE id = ?`,
+        [challengeId]
+    );
+
+    // Check if Player A (challenger) already has a game with a letter set
+    const [gameRows] = await db.query(
+        `SELECT letter_set FROM games WHERE challenge_id = ? ORDER BY created_at ASC LIMIT 1`,
+        [challengeId]
+    );
+
+    let letterSet;
+    if (gameRows.length > 0) {
+        // Reuse challenger’s letter set
+        letterSet = gameRows[0].letter_set;
+    } else {
+        // Challenger hasn’t started yet → generate new set
+        letterSet = [];
+    }
+
+    res.json({ challengeId, letterSet });
 });
 console.log(
     "Registered routes:",

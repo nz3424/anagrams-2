@@ -1,0 +1,19 @@
+.play-now-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 75%;
+}
+
+.game-mode-container {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.play-now-text {
+    font-size: 1rem;
+    color: white;
+}

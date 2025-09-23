@@ -46,6 +46,7 @@ p {
 .home-header {
     position: absolute;
     width: 100%;
+    background: var(--black-bg);
     padding: 0 1rem;
     height: 5rem;
     display: flex;
@@ -369,76 +370,6 @@ p {
     transition: all 100ms ease-in-out;
 }
 
-
-@media only screen and (max-width: 640px) {
-    .active-input-letter {
-        font-size: 1rem;
-    }
-
-    .submit,
-    .shuffle,
-    .backspace {
-        font-size: 0.5rem;
-        margin: 1vw 1vw;
-        width: 20vw;
-        height: 8vw;
-    }
-
-    .flex-letters {
-        margin: 2.5vw 2vw;
-    }
-
-    .feedback-active {
-        font-size: 0.75rem;
-    }
-
-    .score-box {
-        width: 70vw;
-    }
-
-    .results {
-        width: 70vw;
-        font-size: 0.5rem;
-    }
-
-    .result-item-text {
-        font-size: 1.2rem;
-    }
-
-    .result-title {
-        font-size: 2rem;
-    }
-
-
-    .login-to-signup {
-        font-size: 1rem;
-    }
-
-    .login-inputs {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-    }
-
-    .login-inputs input {
-        height: 5vh;
-        width: 20vw;
-        margin-bottom: 2vh;
-        border-radius: 100000px;
-        border: 3px solid var(--yellow);
-    }
-
-
-    .login-button {
-        height: 5vh;
-        width: 10vw;
-        border-radius: 100px;
-        margin: 5px 0;
-        background: var(--yellow);
-        cursor: pointer;
-    }
-}
 
 label {
     font-size: 2rem;

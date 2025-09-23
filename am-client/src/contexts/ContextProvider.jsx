@@ -20,12 +20,21 @@ export const ContextProvider = ({ children }) => {
 
     const [userNeedsRefresh, setUserNeedsRefresh] = useState(false);
 
+    const [gameMode, setGameMode] = useState("solo");
+
+    const [challengeId, setChallengeId] = useState(null);
+
+    const [letterSet, setLetterSet] = useState(() => {
+        const saved = sessionStorage.getItem('letterSet');
+        return saved ? JSON.parse(saved) : null;
+    });
+
     useEffect(() => {
         sessionStorage.setItem('activeUser', JSON.stringify(activeUser));
         sessionStorage.setItem('route', JSON.stringify(route));
     }, [route, activeUser]);
 
-    return (<StateContext.Provider value={{ activeUser, setActiveUser, route, setRoute, userNeedsRefresh, setUserNeedsRefresh }}
+    return (<StateContext.Provider value={{ activeUser, setActiveUser, route, setRoute, userNeedsRefresh, setUserNeedsRefresh, gameMode, setGameMode, challengeId, setChallengeId, letterSet, setLetterSet }}
     >
         {children}
     </StateContext.Provider>)

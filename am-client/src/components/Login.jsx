@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import "./styles.css";
-import Axios from "axios";
-import Cookies from "universal-cookie";
 import { useStateContext } from '../contexts/ContextProvider';
 
 
@@ -10,8 +8,6 @@ const Login = ({ setIsAuth }) => {
     const [password, setPassword] = useState("");
 
     const { activeUser, setActiveUser, setRoute } = useStateContext();
-
-    const cookies = new Cookies();
     const login = () => {
         fetch("http://localhost:3001/login", {
             method: 'POST',
@@ -23,9 +19,9 @@ const Login = ({ setIsAuth }) => {
         }).then((res) => {
             console.log("Response from server ", res);
             const { token, username, id } = res;
-            cookies.set("token", token);
-            cookies.set("username", username);
-            cookies.set("id", id);
+            sessionStorage.setItem("token", token);
+            sessionStorage.setItem("username", username);
+            sessionStorage.setItem("id", id);
             setIsAuth(true);
             setActiveUser({ ...activeUser, username: username, id: id });
             setRoute("home");

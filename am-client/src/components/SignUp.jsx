@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import "./styles.css";
-import { useNavigate } from 'react-router-dom';
-import Axios from "axios";
-import Cookies from "universal-cookie";
 import { useStateContext } from '../contexts/ContextProvider';
 
 
 const SignUp = ({ setIsAuth }) => {
-    const cookies = new Cookies();
     const [user, setUser] = useState(null);
-    const { activeUser, setActiveUser, setRoute } = useStateContext();
-
+    const { setActiveUser, setRoute } = useStateContext();
+    const defaultActiveUser = { username: "", id: null, friends: [], requests: [], user: { high_score: 0, games_played: 0 } };
     const signUp = () => {
         fetch("http://localhost:3001/signup", {
             method: 'POST',
@@ -23,11 +19,11 @@ const SignUp = ({ setIsAuth }) => {
             .then(res => {
                 console.log("Response from server on signup: ", res);
                 const { token, username, id } = res;
-                cookies.set("token", token);
-                cookies.set("username", username);
-                cookies.set("id", id);
+                sessionStorage.setItem("token", token);
+                sessionStorage.setItem("username", username);
+                sessionStorage.setItem("id", id);
                 setIsAuth(true);
-                setActiveUser({ ...activeUser, username: username, id: id });
+                setActiveUser({ ...defaultActiveUser, username: username, id: id });
                 setRoute("home");
             })
             .catch(error => {
@@ -59,7 +55,7 @@ const SignUp = ({ setIsAuth }) => {
             <button className="login-button" type="button" onClick={signUp}>Sign Up</button>
             <div>
                 <span className="login-to-signup" >Go back to </span>
-                <a href="/login">login</a>
+                <a onClick={() => { setRoute("login") }}>login</a>
             </div>
         </div>
     )
