@@ -23,6 +23,7 @@ const db = mysql.createPool({
 
 // Server-side SSE registry
 const clients = new Map(); // userId → res object
+const recentEvents = new Map();
 
 // Generate JWT
 function generateToken(user) {
@@ -31,6 +32,46 @@ function generateToken(user) {
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
     );
+}
+
+function addClient(userId, res) {
+    if (!clients.has(userId)) {
+        clients.set(userId, new Set());
+    }
+    clients.get(userId).add(res);
+}
+
+function removeClient(userId, res) {
+    clients.get(userId)?.delete(res);
+    if (clients.get(userId)?.size === 0) {
+        clients.delete(userId);
+    }
+}
+
+function storeEvent(userId, eventType, data) {
+    const eventId = Date.now();
+    if (!recentEvents.has(userId)) {
+        recentEvents.set(userId, []);
+    }
+
+    const userEvents = recentEvents.get(userId);
+    userEvents.push({ id: eventId, type: eventType, data, timestamp: Date.now() });
+
+
+    // Only keep last 50 events per user to avoid memory bloat
+    if (userEvents.length > 50) userEvents.shift();
+
+    return eventId
+}
+
+// helper function to push events to specific user
+function pushToUser(userId, eventType, data) {
+    const eventId = storeEvent(userId, eventType, data);
+    clients.get(userId)?.forEach(client => {
+        client.write(`id: ${eventId}\n`);
+        client.write(`event: ${eventType}\n`);
+        client.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
 }
 
 function authenticateToken(req, res, next) {
@@ -325,14 +366,25 @@ app.post("/challenges/:id/accept", authenticateToken, async (req, res) => {
 // SSE connection endpoint
 app.get('/events', authenticateToken, (req, res) => {
     const userId = req.user.id;
+    const lastEventId = req.headers['last-event-id'];
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive'); // keep connection open
     res.flushHeaders();
 
+    // replay missed events on connect
+    if (lastEventId && recentEvents.has(userId)) {
+        const missedEvents = recentEvents.get(userId).filter(event => event.id > lastEventId);
+        missedEvents.forEach(event => {
+            res.write(`id: ${event.id}\n`);
+            res.write(`event: ${event.type}\n`);
+            res.write(`data: ${JSON.stringify(event.data)}\n\n`);
+        });
+    }
+
     // register client
-    clients.set(userId, res);
+    addClient(userId, res);
 
     // setup heartbeat to keep connection alive
     const heartbet = setInterval(() => {
@@ -341,19 +393,12 @@ app.get('/events', authenticateToken, (req, res) => {
 
     // cleanup
     req.on('close', () => {
-        clients.delete(userId);
+        removeClient(userId, res);
         clearInterval(heartbet);
     })
 });
 
-// helper function to push events to specific user
-function pushToUser(userId, eventType, data) {
-    const client = clients.get(userId);
-    if (client) {
-        client.write(`event: ${eventType}\n`);
-        client.write(`data: ${JSON.stringify(data)}\n\n`);
-    }
-}
+
 // Health check route
 app.get("/health", (req, res) => {
     res.json({ status: "ok" });
