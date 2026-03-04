@@ -55,6 +55,11 @@ export default function Home({ onLogout }) {
                                 <p>{activeUser.games_played}</p>
                             </div>
                         </div>} />
+                    <Card title="Game Log" content={
+                        <div className="stats-text">
+                            gamelog coming soon!
+                        </div>
+                    } />
                 </div>
             </div >
         </div >

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import "./styles.css";
 import { useStateContext } from './contexts/ContextProvider';
 
 
@@ -10,7 +9,7 @@ export default function App() {
     const token = sessionStorage.getItem("token");
     const [isAuth, setIsAuth] = useState(false);
 
-    const { activeUser, setActiveUser, route, userNeedsRefresh, setUserNeedsRefresh, gameMode, letterSet } = useStateContext();
+    const { activeUser, setActiveUser, route, gameMode, letterSet, refreshUser } = useStateContext();
     // connect user to account
     useEffect(() => {
         if (token) {
@@ -29,7 +28,6 @@ export default function App() {
                     const user = data;
                     setIsAuth(true);
                     setActiveUser({ ...activeUser, ...user });
-                    setUserNeedsRefresh(false);
                     console.log("User data fetched: ", user);
                     // Save other user data you want to state if needed
                 })
@@ -39,7 +37,7 @@ export default function App() {
                     setIsAuth(false);
                 });
         }
-    }, [token, userNeedsRefresh]);
+    }, [token]);
 
     const logout = () => {
         sessionStorage.removeItem("token");

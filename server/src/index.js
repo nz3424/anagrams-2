@@ -21,6 +21,9 @@ const db = mysql.createPool({
     database: process.env.DB_NAME
 });
 
+// Server-side SSE registry
+const clients = new Map(); // userId → res object
+
 // Generate JWT
 function generateToken(user) {
     return jwt.sign(
@@ -32,7 +35,7 @@ function generateToken(user) {
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = (authHeader && authHeader.split(" ")[1]) || req.query.token
 
     if (!token) return res.sendStatus(401);
 
@@ -144,6 +147,10 @@ app.post('/score', authenticateToken, async (req, res) => {
             ]);
         }
 
+        // SSE: push update to both players
+        pushToUser(playerA.player_id, 'record_updated', { challengeId, winnerId, score: playerA.score });
+        pushToUser(playerB.player_id, 'record_updated', { challengeId, winnerId, score: playerB.score });
+
         res.json({ message: "Challenge completed", winnerId, score });
 
     } catch (error) {
@@ -207,6 +214,10 @@ app.post('/friend-request', authenticateToken, async (req, res) => {
 
         // insert friend request into friendship table
         await db.query('INSERT INTO friendships (requester_id, addressee_id) VALUES (?, ?)', [userId, friendId]);
+
+        // SSE: notify the requested friend
+        pushToUser(friendId, 'friend_request', { requesterId: userId, requesterName: req.user.username });
+
         res.json({ message: 'Friend request sent' });
     }
     catch (error) {
@@ -229,6 +240,8 @@ app.post("/friends/accept", authenticateToken, async (req, res) => {
             `UPDATE friendships set STATUS = 'accepted' WHERE requester_id = ? AND addressee_id = ? AND status = 'pending'`,
             [requester_id, userId]
         )
+        pushToUser(requester_id, 'friend_request', { requestedId: userId, requestedName: req.user.username });
+
         res.json({ message: "Friend request accepted" });
     } catch (err) {
         console.error(err);
@@ -259,6 +272,8 @@ app.post("/challenge", authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const { friend_id } = req.body;
         const [result] = await db.query(`INSERT into challenges (challenger_id, challenged_id ) VALUES (?, ?)`, [userId, friend_id]);
+
+        pushToUser(friend_id, 'new_challenge', { challengedId: userId, challengeId: result.insertId });
 
         res.json({ message: "Challenge sent", challengeId: result.insertId });
     }
@@ -305,6 +320,45 @@ app.post("/challenges/:id/accept", authenticateToken, async (req, res) => {
 
     res.json({ challengeId, letterSet });
 });
+
+
+// SSE connection endpoint
+app.get('/events', authenticateToken, (req, res) => {
+    const userId = req.user.id;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive'); // keep connection open
+    res.flushHeaders();
+
+    // register client
+    clients.set(userId, res);
+
+    // setup heartbeat to keep connection alive
+    const heartbet = setInterval(() => {
+        res.write(':heartbeat\n\n');
+    }, 30000);
+
+    // cleanup
+    req.on('close', () => {
+        clients.delete(userId);
+        clearInterval(heartbet);
+    })
+});
+
+// helper function to push events to specific user
+function pushToUser(userId, eventType, data) {
+    const client = clients.get(userId);
+    if (client) {
+        client.write(`event: ${eventType}\n`);
+        client.write(`data: ${JSON.stringify(data)}\n\n`);
+    }
+}
+// Health check route
+app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+});
+
 console.log(
     "Registered routes:",
     app._router.stack

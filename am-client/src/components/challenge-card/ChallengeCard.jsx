@@ -55,7 +55,6 @@ const ChallengeCard = ({ challenges }) => {
                     <div className="left-container">
                         <p className="challenge-text">{challenge.challenger_username}</p>
                         <p className="challenge-subtext">{timeAgo(challenge.created_at)} </p>
-
                     </div>
                     <div className="right-container">
                         <button onClick={() => handleChallengeAccept(challenge.id)}>Accept</button>

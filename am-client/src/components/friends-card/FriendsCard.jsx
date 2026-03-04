@@ -8,7 +8,7 @@ const FriendsCard = ({ friends, requests }) => {
     const [isFriendView, setIsFriendView] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [friendSearch, setFriendSearch] = useState("");
-    const { setUserNeedsRefresh, setRoute, setGameMode, setChallengeId, activeUser, setLetterSet } = useStateContext();
+    const { setRoute, setGameMode, setChallengeId, activeUser, setLetterSet, refreshUser } = useStateContext();
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event && event.key === "Enter") {
@@ -58,7 +58,7 @@ const FriendsCard = ({ friends, requests }) => {
         }).then(async res => {
             const data = await res.json()
             if (!res.ok) throw new Error(`Failed to accept friend request: ${res.json().error}`);
-            setUserNeedsRefresh(true);
+            refreshUser();
             setIsFriendView(true);
             return data;
         }).catch(error => {
@@ -80,7 +80,7 @@ const FriendsCard = ({ friends, requests }) => {
         }).then(async res => {
             const data = await res.json()
             if (!res.ok) throw new Error(`Failed to decline friend request: ${res.json().error}`);
-            setUserNeedsRefresh(true);
+            refreshUser();
             return data;
         }).catch(error => {
             console.error("Error declining friend request: ", error);

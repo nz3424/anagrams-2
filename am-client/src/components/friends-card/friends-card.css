@@ -22,6 +22,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    border: 0.1rem solid var(--light-gray);
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    box-sizing: border-box;
 }
 
 .friends-body {
@@ -56,8 +60,13 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    max-height: 30vh;
+    overflow-y: scroll;
+    scrollbar-width: none;
+
 }
 
 .friend-request {

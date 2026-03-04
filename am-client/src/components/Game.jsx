@@ -30,7 +30,7 @@ export default function Game({ letterSet, size = 6, mode = "solo" }) {
     // format: key: word, value: score
     const [wordBank, setWordBank] = useState({});
 
-    const { activeUser, setUserNeedsRefresh, setGameMode, setChallengeId, challengeId, setLetterSet } = useStateContext();
+    const { activeUser, setGameMode, refreshUser, setChallengeId, challengeId, setLetterSet } = useStateContext();
     // format: {letter: [# of occurences, <indices of letter>]}
     // to access: 
     // desired index: availLetters[<letter>][0]
@@ -90,6 +90,7 @@ export default function Game({ letterSet, size = 6, mode = "solo" }) {
             setAvailLetters({ ...availLetters, [letter]: newVal });
         }
     }
+
 
     // shuffles the letters, clears the board
     const onShuffle = () => {
@@ -312,7 +313,7 @@ export default function Game({ letterSet, size = 6, mode = "solo" }) {
                 // reset game states
                 setGameMode("solo");
                 setChallengeId(null);
-                setUserNeedsRefresh(true);
+                refreshUser();
                 sessionStorage.removeItem("letterSet");
                 setLetterSet(null);
             })
