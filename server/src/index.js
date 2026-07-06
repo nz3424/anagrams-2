@@ -9,9 +9,19 @@ import mysql from "mysql2/promise";
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.options('*', cors());
+
+const corsOptions = {
+    origin: process.env.CLIENT_URL,
+    methods: 'GET,POST',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 86400 // Cache preflight for 24 hours (in seconds)
+};
+
 app.use(express.json());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 const port = 3001;
 
 const db = mysql.createPool({
@@ -230,6 +240,8 @@ app.get('/me', authenticateToken, async (req, res) => {
        WHERE c.challenged_id = ? AND c.status = 'pending'`,
             [id]
         );
+
+        const [recentGames] = await db.query(`SELECT score, created_at FROM games WHERE player_id = ? ORDER BY created_at DESC LIMIT 5`, [id]);
         res.json({
             username: user.username, high_score: user.high_score, games_played: user.games_played,
             wins: user.wins, losses: user.losses, friends: friends, requests: requests, challenges: challenges
@@ -325,41 +337,47 @@ app.post("/challenge", authenticateToken, async (req, res) => {
 });
 
 app.post("/challenges/:id/accept", authenticateToken, async (req, res) => {
-    const challengeId = req.params.id;
-    const playerId = req.user.id;
+    try {
+        const challengeId = req.params.id;
+        const playerId = req.user.id;
 
-    // Check if the user is the one who was challenged
-    const [rows] = await db.query(
-        `SELECT * FROM challenges 
+        // Check if the user is the one who was challenged
+        const [rows] = await db.query(
+            `SELECT * FROM challenges 
      WHERE id = ? AND challenged_id = ? AND status = 'pending'`,
-        [challengeId, playerId]
-    );
-    if (rows.length === 0) {
-        return res.status(403).json({ error: "You cannot accept this challenge." });
+            [challengeId, playerId]
+        );
+        if (rows.length === 0) {
+            return res.status(403).json({ error: "You cannot accept this challenge." });
+        }
+
+        // Update status to "accepted"
+        await db.query(
+            `UPDATE challenges SET status = 'accepted' WHERE id = ?`,
+            [challengeId]
+        );
+
+        // Check if Player A (challenger) already has a game with a letter set
+        const [gameRows] = await db.query(
+            `SELECT letter_set FROM games WHERE challenge_id = ? ORDER BY created_at ASC LIMIT 1`,
+            [challengeId]
+        );
+
+        let letterSet;
+        if (gameRows.length > 0) {
+            // Reuse challenger’s letter set
+            letterSet = gameRows[0].letter_set;
+        } else {
+            // Challenger hasn’t started yet → generate new set
+            letterSet = [];
+        }
+
+        res.json({ challengeId, letterSet });
     }
-
-    // Update status to "accepted"
-    await db.query(
-        `UPDATE challenges SET status = 'accepted' WHERE id = ?`,
-        [challengeId]
-    );
-
-    // Check if Player A (challenger) already has a game with a letter set
-    const [gameRows] = await db.query(
-        `SELECT letter_set FROM games WHERE challenge_id = ? ORDER BY created_at ASC LIMIT 1`,
-        [challengeId]
-    );
-
-    let letterSet;
-    if (gameRows.length > 0) {
-        // Reuse challenger’s letter set
-        letterSet = gameRows[0].letter_set;
-    } else {
-        // Challenger hasn’t started yet → generate new set
-        letterSet = [];
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to accept challenge" });
     }
-
-    res.json({ challengeId, letterSet });
 });
 
 

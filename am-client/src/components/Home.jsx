@@ -5,7 +5,9 @@ import Card from './Card';
 import FriendsCard from './friends-card/FriendsCard';
 import { ChallengeCard } from './challenge-card';
 import { PlayNowCard } from './play-now-card';
+import { GameLogCard } from './game-log-card';
 import { letterSets } from '../constants';
+import Game from './Game';
 
 export default function Home({ onLogout }) {
     const { activeUser, setRoute, setGameMode, setLetterSet, setChallengeId } = useStateContext();
@@ -17,7 +19,6 @@ export default function Home({ onLogout }) {
         setRoute('login');
     }
 
-    console.log("Active user in Home: ", activeUser);
     return (
         <div className="home-container">
             <div className="home-header">
@@ -56,9 +57,7 @@ export default function Home({ onLogout }) {
                             </div>
                         </div>} />
                     <Card title="Game Log" content={
-                        <div className="stats-text">
-                            gamelog coming soon!
-                        </div>
+                        <GameLogCard />
                     } />
                 </div>
             </div >

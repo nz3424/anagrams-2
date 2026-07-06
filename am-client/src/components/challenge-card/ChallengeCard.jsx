@@ -4,7 +4,7 @@ import "./challenge-card.css";
 import { useStateContext } from '../../contexts/ContextProvider';
 
 const ChallengeCard = ({ challenges }) => {
-    const { setRoute, setGameMode, setChallengeId, setLetterSet } = useStateContext();
+    const { setRoute, setGameMode, setChallengeId, setLetterSet, setIsAuth } = useStateContext();
 
     function timeAgo(dateString) {
         const now = new Date();
@@ -29,7 +29,15 @@ const ChallengeCard = ({ challenges }) => {
                 Authorization: `Bearer ${sessionStorage.getItem("token")}`,
             }
         }).then(async res => {
-            console.log("Response from accept challenge: ", res);
+            console.log("Accept challenge response status: ", res.status);
+            if (res.status === 403) {
+                // Token invalid or expired — force logout or clear storage
+                console.error("Token invalid or expired. Logging out.");
+                sessionStorage.removeItem("token");
+                setRoute("login");
+                setIsAuth(false);
+                return;
+            }
             const data = await res.json()
             console.log("Accept challenge response data: ", data);
 
@@ -44,7 +52,6 @@ const ChallengeCard = ({ challenges }) => {
             return data;
         }).catch(error => {
             console.error("Error accepting challenge: ", error);
-            alert("Failed to accept challenge");
         })
 
     }
