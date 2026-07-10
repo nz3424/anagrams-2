@@ -4,7 +4,7 @@ import "./challenge-card.css";
 import { useStateContext } from '../../contexts/ContextProvider';
 
 const ChallengeCard = ({ challenges }) => {
-    const { setRoute, setGameMode, setChallengeId, setLetterSet, setIsAuth } = useStateContext();
+    const { setRoute, setGameMode, setChallengeId, setLetterSet } = useStateContext();
 
     function timeAgo(dateString) {
         const now = new Date();
@@ -35,7 +35,6 @@ const ChallengeCard = ({ challenges }) => {
                 console.error("Token invalid or expired. Logging out.");
                 sessionStorage.removeItem("token");
                 setRoute("login");
-                setIsAuth(false);
                 return;
             }
             const data = await res.json()
